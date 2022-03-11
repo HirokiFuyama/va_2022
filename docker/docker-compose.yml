@@ -1,0 +1,19 @@
+version: "3"
+services:
+  analysis:
+    build: .
+    container_name: va_2022
+    volumes:
+      - ../:/tmp/working
+    working_dir: /tmp/working
+    ports:
+      - 8888:8888
+    deploy:
+          resources:
+            reservations:
+
+              devices:
+                - driver: nvidia
+                  count: 1
+                  capabilities: [gpu]
+#    command: jupyter lab --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token=''
