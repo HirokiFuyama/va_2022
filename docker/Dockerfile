@@ -7,6 +7,17 @@ RUN apt update \
 #    sudo \
     python3 \
     python3-pip
+#    nvidia-container-toolkit
+
+#RUN gedit nvidia-container-runtime-script.sh
+#RUN curl -s -L https://nvidia.github.io/nvidia-container-runtime/gpgkey | \
+#    sudo apt-key add - distribution=$(. /etc/os-release;echo $ID$VERSION_ID) \
+#    curl -s -L https://nvidia.github.io/nvidia-container-runtime/$distribution/nvidia-container-runtime.list | \
+#    sudo tee /etc/apt/sources.list.d/nvidia-container-runtime.list \
+#    sudo apt-get update
+#RUN sh nvidia-container-runtime-script.sh
+
+#RUN systemctl restart dockerd
 
 RUN pip3 install -U pip
 

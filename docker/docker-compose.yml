@@ -13,7 +13,7 @@ services:
             reservations:
               devices:
                 - driver: nvidia
-                - count: 1
-                - capabilities: [gpu]
-#    tty: true
+                  count: 1
+                  capabilities: [gpu]
+    tty: true
     command: jupyter lab --ip=0.0.0.0 --allow-root --no-browser --NotebookApp.token=''
