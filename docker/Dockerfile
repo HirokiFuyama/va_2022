@@ -5,9 +5,15 @@ RUN apt update \
 #    wget \
 #    curl \
 #    sudo \
-    python3.8 \
+    python3 \
     python3-pip
 
-RUN pip install -U pip
+RUN pip3 install -U pip
+
 COPY requirements.txt requirements.txt
-RUN pip install -r requirements.txt
+
+RUN pip3 install -r requirements.txt
+
+#ENV NVIDIA_VISIBLE_DEVICES all
+#ENV NVIDIA_DRIVER_CAPABILITIES utility,compute
+#ENTRYPOINT [ "python" ]
