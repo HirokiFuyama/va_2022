@@ -6,6 +6,8 @@ services:
     volumes:
       - ../:/tmp/working
     working_dir: /tmp/working
+    ports:
+      - 8888:8888
     deploy:
           resources:
             reservations:

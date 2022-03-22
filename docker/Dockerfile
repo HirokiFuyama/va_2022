@@ -6,7 +6,8 @@ RUN apt update \
 #    curl \
 #    sudo \
     python3 \
-    python3-pip
+    python3-pip \
+    libsndfile1
 
 RUN pip3 install -U pip
 

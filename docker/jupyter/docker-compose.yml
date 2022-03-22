@@ -4,7 +4,7 @@ services:
     build: .
     container_name: va_2022
     volumes:
-      - ../:/tmp/working
+      - ../../:/tmp/working
     working_dir: /tmp/working
     ports:
       - 8888:8888
