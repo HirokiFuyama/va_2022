@@ -12,12 +12,14 @@ import src.util.distinguish_av as distinguish_av
 
 @dataclass
 class Config:
-    a_path: str = rf'G:\マイドライブ\A\*.wav'
-    v_path: str = rf'G:\マイドライブ\V\*.wav'
+    # a_path: str = rf'G:\マイドライブ\A\*.wav'
+    # v_path: str = rf'G:\マイドライブ\V\*.wav'
     time_len: int = 15  # sec
     freq_th: int = 1000  # Hz
     base_year: int = 2021
     base_month: int = 1
+    a_path: str = '/Volumes/GoogleDrive-110826503708205819846/マイドライブ/A/*.wav'
+    v_path: str = '/Volumes/GoogleDrive-110826503708205819846/マイドライブ/V/*.wav'
 
 
 def calculate_rmse(window_path_list, wav_path):
