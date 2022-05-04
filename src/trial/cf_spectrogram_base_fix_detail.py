@@ -21,14 +21,17 @@ class Config:
     time_window: int = 5  # day
     time_len: int = 15  # sec
     bins_freq: int = 50  # Hz
-    freq_th_low: int = 500  # Hz
-    freq_th_high: int = 2000  # Hz
+    freq_th_low: int = 2000  # Hz
+    freq_th_high: int = 3500  # Hz
+    plot_hz: int = 3000  # Hz
     base_start_date: str = "20210101"  # YYYYMMDD
     base_end_date: str = "20210228"  # YYYYMMDD
     target_start_date: str = "20211201"  # YYYYMMDD
     target_end_date: str = "20211230"  # YYYYMMDD
+    remove_date: str = "20211217"  # YYYYMMDD
     a_path: str = '../../data/raw/A/*.wav'
     v_path: str = '../../data/raw/V/*.wav'
+    save_path: str = "../../figure/test"
 
 
 def read_wav(file_path):
@@ -91,70 +94,35 @@ def mk_path_list(path_list):
     # df["date"] = [i.split("\\")[-1][:8] for i in df['path']]
     df["date"] = pd.to_datetime(df["date"])
 
+    # base
     base_path_array = df[
         (df["date"] >= pd.to_datetime(Config.base_start_date)) & (df['date'] <= pd.to_datetime(Config.base_end_date))
         ]['path'].values
 
+    # target
     target_df = df[
         (df["date"] >= pd.to_datetime(Config.target_start_date)) & (df['date'] <= pd.to_datetime(Config.target_end_date))
         ]
 
+    target_df = target_df[target_df['date'] != pd.to_datetime(Config.remove_date)]
     target_path_array = target_df['path'].values
     target_date_list = target_df['date'].astype("str").tolist()
 
     return base_path_array, target_path_array, target_date_list
 
 
-# def min_max_normalization(diff_power_array):
-#     """
-#
-#     Args:
-#         diff_power_array (ndarray): 3 dimension
-#
-#     Returns:
-#
-#     """
-#     _max = diff_power_array.max()
-#     _min = diff_power_array.min()
-#     _diff = _max - _min
-#
-#     diff_power_array = (diff_power_array-_min)/_diff
-#     return diff_power_array
+def stft_diff(base_df, target_path_list):
+    """
 
+    Args:
+        base_df:
+        target_path_list:
 
+    Returns:
 
-# def fft_cut_bin_time_window(power_list, date_list, time_win=Config.time_window):
-#     """
-#
-#     Args:
-#         power_list
-#         date_list (list): list of str
-#         time_win (int): unit: day
-#
-#     Returns:
-#
-#     """
-#
-#     power_time_window = [
-#         np.mean(power_list[i:i + time_win], axis=0) for i in range(0, len(power_list) - time_win, time_win)
-#     ]
-#
-#     date_list_window = [
-#         date_list[i] + " - " +  date_list[i + time_win] for i in range(0, len(date_list) - time_win, time_win)
-#     ]
-#     return np.array(power_time_window), date_list_window
-
-
-def process(glob_path):
-
-    path_list = glob.glob(glob_path)
-    path_list.sort()
-    base_path_list, target_path_list, target_date_list = mk_path_list(path_list)
-
-    base_df = base_spectrogram(base_path_list)
-
+    """
     power_diff_list = []
-    wav_path_list = []
+    # wav_path_list = []
     for i in range(len(target_path_list)):
         _stft = stft.Stft(
             wav_array=read_wav(target_path_list[i]),
@@ -166,24 +134,54 @@ def process(glob_path):
         _power, _, _ = _stft.stft_bin(bins_hz=Config.bins_freq)
 
         power_diff_list.append(base_df.values - _power)
-        wav_path_list.append(target_path_list[i])
+        # wav_path_list.append(target_path_list[i])
 
         if i % 10 == 0:
             print(i, '/', len(target_path_list))
 
-    # 周波数のみbin
+    return power_diff_list
+
+
+def stft_scatter_plot(base_df, power_list, date_list, save_path=Config.save_path, plot_power_hz=Config.plot_hz):
+    """
+
+    Args:
+        base_df (pd.DataFrame):
+        power_list (list):
+        date_list (list):
+        save_path (str):
+        plot_power_hz (int): unit Hz
+
+    Returns:
+
+    """
     plotly_scatter = []
-    power_diff_list = np.array(power_diff_list)
-    for n, i in enumerate(power_diff_list):
+    power_list = np.array(power_list)
+    for n, i in enumerate(power_list):
         _df = pd.DataFrame(i)
         _df.index = base_df.index
         _df.columns = base_df.columns
 
-        _scatter = go.Scatter(x=_df.columns.to_list(), y=_df.loc[600, :].values)
+        _scatter = go.Scatter(x=_df.columns.to_list(), y=_df.loc[plot_power_hz, :].values, name=date_list[n])
         plotly_scatter.append(_scatter)
 
     fig = go.Figure(data=plotly_scatter)
-    offline.plot(fig, filename="../../figure/test", auto_open=True)
+    offline.plot(fig, filename=save_path, auto_open=True)
+
+
+def process(glob_path):
+
+    path_list = glob.glob(glob_path)
+    path_list.sort()
+    base_path_list, target_path_list, target_date_list = mk_path_list(path_list)
+
+    base_df = base_spectrogram(base_path_list)
+
+    power_diff_list = stft_diff(base_df, target_path_list)
+
+    # 周波数のみbin
+    stft_scatter_plot(base_df, power_diff_list, target_date_list)
+
     # plt.legend(fontsize=15, loc="upper left")
     # plt.show()
 

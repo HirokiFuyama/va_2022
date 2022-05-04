@@ -9,28 +9,36 @@ class Fft:
         self.wav_array = wav_array
         self.fs = fs
 
-    def fft(self, padding=False):
-        """fft
+    def fft(self, y_scale="dB", padding=False):
+        """
+        dB: Reference Sound Pressure = 20μPa (0dB)
 
         Args:
-            padding:
+            y_scale (str): dB or liner
+            padding (bool):
 
         Returns:
 
         """
+        reference_pressure = 20e-6
+
         if padding:
             _n = int(len(self.wav_array)*2)
         else:
             _n = len(self.wav_array)
         power = fftpack.fft(self.wav_array, n=_n)
-        power = abs(power)[0:round(_n / 2)] ** 2 / _n
-        power = 10 * np.log10(power)
+        power = abs(power)[0:round(_n / 2)] ** 2
         freq = np.arange(0, self.fs / 2, self.fs / _n)
+
+        if y_scale == "dB":
+            power = 20 * np.log10(power / reference_pressure)
+        elif y_scale == "liner":
+            pass
 
         return power, freq
 
     def fft_bin(self, bins_hz=1, padding=False):
-        """bins_hz の周波数を単位として窓をかけて平均値を出す
+        """Calculate the average value in units of frequency of bins_hz
 
         Args:
             bins_hz: int (unit:Hz)
@@ -228,3 +236,36 @@ class Stft(Fft):
         power = np.array(power).T
 
         return power, freq, time
+
+
+class Cepstrum(Fft):
+
+    def __init__(self, wav_array, fs=44100):
+        super().__init__(wav_array, fs)
+
+    def envelope(self, dim=500):
+        """
+
+        Args:
+            dim (int): Number of samples for liftering
+
+        Returns:
+
+        """
+        _n = len(self.wav_array)
+
+        # FFT
+        power = fftpack.fft(self.wav_array)
+        power = abs(power) ** 2
+        power = 20 * np.log10(power / 20e-6)
+
+        # FFT -> IFFT
+        cepstrum = fftpack.fft(power)
+        cepstrum[dim: len(cepstrum) - dim] = 0
+        envelope = np.real(fftpack.ifft(cepstrum))
+
+        freq = np.arange(0, self.fs / 2, self.fs / _n)
+        power = power[0:round(_n / 2)]
+        envelope = envelope[0:round(_n / 2)]
+
+        return power, freq, envelope
